@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-powered web development agent">
+    <title>AI Web Builder Agent</title>
+    <style>
+        /* ============================================
+           CSS RESET & MODERN BASE STYLES
+           ============================================ */
+        
+        /* Minimal modern reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* CSS Custom Properties - Light Theme (default) */
+        :root {
+            /* Color palette using oklch for wide-gamut colors */
+            --color-bg: oklch(0.98 0 0);
+            --color-bg-alt: oklch(0.95 0 0);
+            --color-text: oklch(0.15 0 0);
+            --color-text-muted: oklch(0.5 0 0);
+            --color-primary: oklch(0.6 0.25 250);
+            --color-primary-hover: oklch(0.55 0.25 250);
+            --color-border: oklch(0.85 0 0);
+            --color-border-focus: oklch(0.6 0.25 250);
+            --color-message-user: oklch(0.6 0.25 250);
+            --color-message-agent: oklch(0.95 0 0);
+            --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px oklch(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px oklch(0 0 0 / 0.1);
+            
+            /* Typography */
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            --font-size-xs: 0.75rem;
+            --font-size-sm: 0.875rem;
+            --font-size-base: 1rem;
+            --font-size-lg: 1.125rem;
+            --font-size-xl: 1.25rem;
+            
+            /* Spacing */
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            
+            /* Border radius */
+            --radius-sm: 0.25rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            
+            /* Transitions */
+            --transition-fast: 150ms ease;
+            --transition-base: 250ms ease;
+        }
+
+        /* Dark theme */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-bg: oklch(0.15 0 0);
+                --color-bg-alt: oklch(0.2 0 0);
+                --color-text: oklch(0.95 0 0);
+                --color-text-muted: oklch(0.65 0 0);
+                --color-primary: oklch(0.7 0.25 250);
+                --color-primary-hover: oklch(0.75 0.25 250);
+                --color-border: oklch(0.3 0 0);
+                --color-message-user: oklch(0.7 0.25 250);
+                --color-message-agent: oklch(0.25 0 0);
+                --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.3);
+                --shadow-md: 0 4px 6px oklch(0 0 0 / 0.3);
+                --shadow-lg: 0 10px 15px oklch(0 0 0 / 0.3);
+            }
+        }
+
+        /* Manual theme toggle support */
+        [data-theme="light"] {
+            --color-bg: oklch(0.98 0 0);
+            --color-bg-alt: oklch(0.95 0 0);
+            --color-text: oklch(0.15 0 0);
+            --color-text-muted: oklch(0.5 0 0);
+            --color-border: oklch(0.85 0 0);
+        }
+
+        [data-theme="dark"] {
+            --color-bg: oklch(0.15 0 0);
+            --color-bg-alt: oklch(0.2 0 0);
+            --color-text: oklch(0.95 0 0);
+            --color-text-muted: oklch(0.65 0 0);
+            --color-border: oklch(0.3 0 0);
+        }
+
+        /* ============================================
+           MAIN LAYOUT - CSS GRID SPLIT SCREEN
+           ============================================ */
+        
+        body {
+            font-family: var(--font-family);
+            font-size: var(--font-size-base);
+            line-height: 1.5;
+            color: var(--color-text);
+            background-color: var(--color-bg);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* ============================================
+           LEFT PANEL - CHAT INTERFACE
+           ============================================ */
+        
+        .chat-panel {
+            background-color: var(--color-bg-alt);
+            border-right: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+            min-width: 350px;
+        }
+
+        .chat-header {
+            padding: var(--space-md);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .chat-header h1 {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .chat-header .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+        }
+
+        .api-key-section {
+            padding: var(--space-md);
+            border-bottom: 1px solid var(--color-border);
+            background-color: var(--color-bg);
+        }
+
+        .api-key-section label {
+            display: block;
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            margin-bottom: var(--space-xs);
+            color: var(--color-text-muted);
+        }
+
+        .api-key-input {
+            width: 100%;
+            padding: var(--space-sm);
+            font-size: var(--font-size-sm);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .api-key-input:focus {
+            outline: none;
+            border-color: var(--color-border-focus);
+            box-shadow: 0 0 0 3px oklch(0.6 0.25 250 / 0.2);
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+
+        .message {
+            max-width: 100%;
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-lg);
+            font-size: var(--font-size-sm);
+            line-height: 1.6;
+            word-wrap: break-word;
+            animation: messageFadeIn var(--transition-base) ease;
+        }
+
+        @keyframes messageFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message--user {
+            background-color: var(--color-message-user);
+            color: oklch(0.98 0 0);
+            align-self: flex-end;
+            border-bottom-right-radius: var(--radius-sm);
+        }
+
+        .message--agent {
+            background-color: var(--color-message-agent);
+            color: var(--color-text);
+            align-self: flex-start;
+            border: 1px solid var(--color-border);
+            border-bottom-left-radius: var(--radius-sm);
+        }
+
+        .message--typing {
+            background-color: var(--color-message-agent);
+            color: var(--color-text-muted);
+            font-style: italic;
+            align-self: flex-start;
+            border: 1px dashed var(--color-border);
+        }
+
+        .message-timestamp {
+            display: block;
+            font-size: var(--font-size-xs);
+            margin-top: var(--space-xs);
+            opacity: 0.7;
+        }
+
+        .input-container {
+            padding: var(--space-md);
+            border-top: 1px solid var(--color-border);
+            background-color: var(--color-bg);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: var(--space-sm) var(--space-md);
+            font-size: var(--font-size-sm);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            resize: none;
+            min-height: 44px;
+            max-height: 120px;
+            font-family: var(--font-family);
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--color-border-focus);
+            box-shadow: 0 0 0 3px oklch(0.6 0.25 250 / 0.2);
+        }
+
+        .send-button {
+            padding: var(--space-sm) var(--space-lg);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            color: oklch(0.98 0 0);
+            background-color: var(--color-primary);
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: background-color var(--transition-fast), transform var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-xs);
+        }
+
+        .send-button:hover:not(:disabled) {
+            background-color: var(--color-primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .send-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ============================================
+           RIGHT PANEL - PREVIEW AREA
+           ============================================ */
+        
+        .preview-panel {
+            display: flex;
+            flex-direction: column;
+            background-color: var(--color-bg);
+        }
+
+        .preview-header {
+            padding: var(--space-md);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--space-md);
+            background-color: var(--color-bg-alt);
+        }
+
+        .preview-header h2 {
+            font-size: var(--font-size-base);
+            font-weight: 600;
+        }
+
+        .preview-controls {
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        .control-button {
+            padding: var(--space-xs) var(--space-sm);
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+            color: var(--color-text);
+            background-color: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background-color var(--transition-fast), border-color var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .control-button:hover {
+            background-color: var(--color-border);
+            border-color: var(--color-text-muted);
+        }
+
+        .control-button--primary {
+            background-color: var(--color-primary);
+            color: oklch(0.98 0 0);
+            border-color: var(--color-primary);
+        }
+
+        .control-button--primary:hover {
+            background-color: var(--color-primary-hover);
+            border-color: var(--color-primary-hover);
+        }
+
+        .preview-container {
+            flex: 1;
+            position: relative;
+            background-color: var(--color-bg-alt);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: #ffffff;
+        }
+
+        .status-bar {
+            padding: var(--space-xs) var(--space-md);
+            background-color: var(--color-bg-alt);
+            border-top: 1px solid var(--color-border);
+            font-size: var(--font-size-xs);
+            color: var(--color-text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--color-border);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot--active {
+            background-color: oklch(0.65 0.25 140);
+        }
+
+        .status-dot--error {
+            background-color: oklch(0.6 0.25 25);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* ============================================
+           RESPONSIVE DESIGN
+           ============================================ */
+        
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+
+            .chat-panel {
+                height: 50vh;
+                border-right: none;
+                border-bottom: 1px solid var(--color-border);
+            }
+
+            .preview-panel {
+                height: 50vh;
+            }
+
+            .chat-header h1 span {
+                display: none;
+            }
+        }
+
+        /* ============================================
+           ACCESSIBILITY
+           ============================================ */
+        
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Focus visible for keyboard navigation */
+        :focus-visible {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+
+        /* Skip link for keyboard users */
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: var(--space-md);
+            padding: var(--space-sm) var(--space-md);
+            background-color: var(--color-primary);
+            color: oklch(0.98 0 0);
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            top: var(--space-md);
+        }
+    </style>
+</head>
+<body>
+    <a href="#chat-input" class="skip-link">Skip to chat input</a>
+    
+    <div class="app-container">
+        <!-- Left Panel: Chat Interface -->
+        <aside class="chat-panel" role="complementary" aria-label="Chat with AI agent">
+            <header class="chat-header">
+                <h1>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"></path>
+                        <path d="M12 8v8"></path>
+                        <path d="M8 12h8"></path>
+                    </svg>
+                    <span>AI Web Builder</span>
+                </h1>
+            </header>
+
+            <div class="messages-container" id="messages" role="log" aria-live="polite">
+                <!-- Messages will be dynamically added here -->
+            </div>
+
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="chat-input" 
+                        class="chat-input" 
+                        placeholder="Describe the website you want to build..."
+                        rows="1"
+                        aria-label="Chat input"
+                    ></textarea>
+                    <button 
+                        id="send-button" 
+                        class="send-button" 
+                        aria-label="Send message"
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        Send
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Panel: Live Preview -->
+        <main class="preview-panel" role="main" aria-label="Live website preview">
+            <header class="preview-header">
+                <h2>Live Preview</h2>
+                <div class="preview-controls">
+                    <button id="refresh-button" class="control-button" aria-label="Refresh preview">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 4v6h-6"></path>
+                            <path d="M1 20v-6h6"></path>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        Refresh
+                    </button>
+                    <button id="open-button" class="control-button" aria-label="Open in new tab">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        Open
+                    </button>
+                    <button id="download-button" class="control-button control-button--primary" aria-label="Download HTML file">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download
+                    </button>
+                </div>
+            </header>
+
+            <div class="preview-container">
+                <iframe 
+                    id="preview-iframe" 
+                    class="preview-iframe" 
+                    sandbox="allow-scripts allow-same-origin allow-forms"
+                    title="Website preview"
+                    aria-label="Generated website preview"
+                ></iframe>
+            </div>
+
+            <footer class="status-bar">
+                <div class="status-indicator">
+                    <span id="status-dot" class="status-dot"></span>
+                    <span id="status-text">Ready</span>
+                </div>
+                <span id="char-count">0 characters</span>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        // ============================================
+        // AI WEB BUILDER - FRONTEND UI LOGIC
+        // ============================================
+
+        class WebBuilderUI {
+            constructor() {
+                // DOM Elements
+                this.messagesContainer = document.getElementById('messages');
+                this.chatInput = document.getElementById('chat-input');
+                this.sendButton = document.getElementById('send-button');
+                this.previewIframe = document.getElementById('preview-iframe');
+                this.refreshButton = document.getElementById('refresh-button');
+                this.openButton = document.getElementById('open-button');
+                this.downloadButton = document.getElementById('download-button');
+                this.statusDot = document.getElementById('status-dot');
+                this.statusText = document.getElementById('status-text');
+                this.charCount = document.getElementById('char-count');
+
+                // State
+                this.conversationHistory = [];
+                this.generatedCode = '';
+                this.isGenerating = false;
+                this.apiKey = localStorage.getItem('openai_api_key') || '';
+
+                // API base URL
+                this.apiBaseUrl = window.location.origin + '/api';
+
+                // Initialize
+                this.init();
+            }
+
+            init() {
+                // Load saved conversation
+                this.loadConversation();
+
+                // Set up event listeners
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.chatInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+                this.chatInput.addEventListener('input', () => this.autoResizeTextarea());
+                this.refreshButton.addEventListener('click', () => this.refreshPreview());
+                this.openButton.addEventListener('click', () => this.openInNewTab());
+                this.downloadButton.addEventListener('click', () => this.downloadCode());
+
+                // Add welcome message if conversation is empty
+                if (this.conversationHistory.length === 0) {
+                    this.addMessage('agent', 'Hello! I\'m your AI web builder. Describe the website you want to create, and I\'ll generate it for you in real-time. For example: "Create a landing page for a coffee shop with a hero section, menu, and contact form."');
+                }
+
+                // Update status
+                this.updateStatus('Ready', 'active');
+            }
+
+            async sendMessage() {
+                const message = this.chatInput.value.trim();
+                
+                if (!message || this.isGenerating) return;
+
+                // Clear input
+                this.chatInput.value = '';
+                this.autoResizeTextarea();
+
+                // Add user message
+                this.addMessage('user', message);
+
+                // Set generating state
+                this.isGenerating = true;
+                this.updateStatus('Generating...', 'active');
+                this.sendButton.disabled = true;
+
+                try {
+                    // Send request to Python backend
+                    const response = await fetch(`${this.apiBaseUrl}/chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            api_key: this.apiKey || undefined
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Failed to generate website');
+                    }
+
+                    const data = await response.json();
+
+                    // Update preview
+                    this.generatedCode = data.code;
+                    this.updatePreview(data.code);
+                    
+                    // Add agent response
+                    this.addMessage('agent', data.explanation);
+                    
+                    this.updateStatus('Generated successfully', 'active');
+                    this.saveConversation();
+                } catch (error) {
+                    console.error('Error generating code:', error);
+                    this.addMessage('agent', `Error: ${error.message}. Please try again.`);
+                    this.updateStatus('Error', 'error');
+                }
+
+                this.isGenerating = false;
+                this.sendButton.disabled = false;
+            }
+
+            addMessage(type, content) {
+                const message = {
+                    type,
+                    content,
+                    timestamp: new Date().toISOString()
+                };
+
+                this.conversationHistory.push(message);
+                this.renderMessage(message);
+                this.scrollToBottom();
+            }
+
+            renderMessage(message) {
+                const messageEl = document.createElement('div');
+                messageEl.className = `message message--${message.type}`;
+                messageEl.innerHTML = `
+                    <div class="message-content">${this.formatMessageContent(message.content)}</div>
+                    <span class="message-timestamp">${this.formatTimestamp(message.timestamp)}</span>
+                `;
+                this.messagesContainer.appendChild(messageEl);
+            }
+
+            formatMessageContent(content) {
+                // Simple formatting - convert newlines to <br>
+                return content
+                    .replace(/&/g, '&')
+                    .replace(/</g, '<')
+                    .replace(/>/g, '>')
+                    .replace(/\n/g, '<br>');
+            }
+
+            formatTimestamp(timestamp) {
+                const date = new Date(timestamp);
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+
+            scrollToBottom() {
+                this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+            }
+
+            updatePreview(code) {
+                const iframeDoc = this.previewIframe.contentDocument || this.previewIframe.contentWindow.document;
+                iframeDoc.open();
+                iframeDoc.write(code);
+                iframeDoc.close();
+                
+                // Update character count
+                this.charCount.textContent = `${code.length.toLocaleString()} characters`;
+            }
+
+            refreshPreview() {
+                if (this.generatedCode) {
+                    this.updatePreview(this.generatedCode);
+                    this.updateStatus('Preview refreshed', 'active');
+                }
+            }
+
+            openInNewTab() {
+                if (this.generatedCode) {
+                    const blob = new Blob([this.generatedCode], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    window.open(url, '_blank');
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                }
+            }
+
+            downloadCode() {
+                if (this.generatedCode) {
+                    const blob = new Blob([this.generatedCode], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'generated-website.html';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    this.updateStatus('File downloaded', 'active');
+                }
+            }
+
+            updateStatus(text, state) {
+                this.statusText.textContent = text;
+                this.statusDot.className = `status-dot status-dot--${state}`;
+            }
+
+            autoResizeTextarea() {
+                this.chatInput.style.height = 'auto';
+                this.chatInput.style.height = Math.min(this.chatInput.scrollHeight, 120) + 'px';
+            }
+
+            saveConversation() {
+                localStorage.setItem('conversation', JSON.stringify(this.conversationHistory));
+            }
+
+            loadConversation() {
+                const saved = localStorage.getItem('conversation');
+                if (saved) {
+                    try {
+                        this.conversationHistory = JSON.parse(saved);
+                        this.conversationHistory.forEach(msg => this.renderMessage(msg));
+                        this.scrollToBottom();
+                    } catch (error) {
+                        console.error('Error loading conversation:', error);
+                        this.conversationHistory = [];
+                    }
+                }
+            }
+        }
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', () => {
+            new WebBuilderUI();
+        });
+    </script>
+</body>
+</html>
